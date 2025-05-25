@@ -2,21 +2,51 @@
 
 import ankamaLogo from '../../assets/ankama.svg'
 import Image from "next/image";
+import {useAuth} from "@/contexts/AuthContext";
+import {useRef, useState} from "react";
 
 export default function Login() {
+    const {login} = useAuth();
+    const emailRef = useRef<HTMLInputElement>(null)
+    const passwordRef = useRef<HTMLInputElement>(null)
+    const [loading, setLoading] = useState<boolean>(false);
+    const [loginFail, setLoginFail] = useState<boolean>(false);
+
+    const onSubmit = () => {
+        if (!loading) {
+            setLoading(true)
+            login({
+                email: emailRef?.current?.value || "",
+                password: passwordRef?.current?.value || ""
+            }).then(response => {
+                    setLoading(false)
+                    if (response.success) {
+                        location.pathname = "/admin"
+                        setLoginFail(false)
+                    } else {
+                        setLoginFail(true)
+                    }
+                }
+            )
+        }
+    }
+
     return (
         <div className="w-full h-full bg-gray-100 text-gray-900 flex">
             <div className="min-h-full px-48 flex items-center">
                 <div className="min-w-[400px] w-full">
                     <div className="w-ful0 flex flex-col gap-5">
                         <div className="font-black text-2xl">Se connecter</div>
+                        {loginFail && <div role="alert" className="alert alert-error alert-outline">
+                            <span>Echec de la connexion.</span>
+                        </div>}
                         <fieldset className="fieldset grow p-0">
                             <legend className="fieldset-legend pt-0">Identifiant</legend>
-                            <input type="text" className="input w-full" placeholder=""/>
+                            <input type="text" className="input w-full" placeholder="" ref={emailRef}/>
                         </fieldset>
                         <fieldset className="fieldset grow p-0">
                             <legend className="fieldset-legend pt-0">Mot de passe</legend>
-                            <input type="text" className="input w-full" placeholder=""/>
+                            <input type="password" className="input w-full" placeholder="" ref={passwordRef}/>
                         </fieldset>
                         <div className="flex items-center text-xs">
                             <div className="grow">
@@ -27,16 +57,20 @@ export default function Login() {
                             </div>
                             <a href="" className="text-primary">Mot de passe oublié ?</a>
                         </div>
-                        <div className="btn btn-primary w-full">Se connecter</div>
+                        <div className={`btn btn-primary w-full ${loading ? "opacity-50" : "opacity-100"}`}
+                             onClick={onSubmit}>
+                            {!loading && <>Se connecter</>}
+                            {loading && <span className="loading loading-ring loading-sm"></span>}
+                        </div>
                         <div className="divider my-0">Ou se connecter avec</div>
                         <div className="flex gap-4">
                             <button className="btn bg-white text-black border-[#e5e5e5] grow"
-                                    onClick={()=>document.getElementById('or_not')?.showModal()}>
+                                    onClick={() => document.getElementById('or_not')?.showModal()}>
                                 <Image src={ankamaLogo} alt="" className="h-6 w-6"/>
                                 Ankama
                             </button>
                             <button className="btn bg-white text-black border-[#e5e5e5] grow"
-                                    onClick={()=>document.getElementById('or_not')?.showModal()}>
+                                    onClick={() => document.getElementById('or_not')?.showModal()}>
                                 <svg aria-label="Google logo" width="16" height="16" xmlns="http://www.w3.org/2000/svg"
                                      viewBox="0 0 512 512">
                                     <g>

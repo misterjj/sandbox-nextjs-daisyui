@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "generate": "npx @openapitools/openapi-generator-cli generate -i http://127.0.0.1:8000/api/docs.jsonopenapi -g typescript-fetch -o ./src/generated/sdk",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
@@ -11,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.7",
     "daisyui": "^5.0.37",
+    "kbar": "^0.1.0-beta.46",
     "next": "^15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
