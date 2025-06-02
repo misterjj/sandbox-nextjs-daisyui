@@ -4,3 +4,40 @@
 @tailwind components;
 @tailwind utilities;
 @plugin "daisyui";
+
+.rc-slider {
+    @apply !h-8 !p-0 translate-y-1/2;
+
+    &.rc-slider-horizontal {
+        .rc-slider-rail {
+            @apply !h-3 !bg-primary/10 -translate-y-1/2;
+        }
+        .rc-slider-step {
+            @apply !h-3 -translate-y-1/2;
+        }
+
+        .rc-slider-track {
+            @apply !h-6 -translate-y-1/2 !bg-primary;
+        }
+
+        .rc-slider-handle {
+            @apply border-primary border-4 !h-6 !w-6 !bg-white -translate-y-1/2 m-0 opacity-100;
+
+            &.rc-slider-handle-dragging {
+                @apply !border-primary !shadow-none;
+            }
+        }
+
+        .rc-slider-dot {
+            @apply !bottom-1/2 translate-y-1/2 border-3 h-3 w-3;
+
+            &.rc-slider-dot-active {
+                @apply border-none w-1.5 h-1.5;
+            }
+        }
+
+        .rc-slider-mark {
+            @apply !top-3;
+        }
+    }
+}

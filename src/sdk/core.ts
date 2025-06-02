@@ -3,21 +3,25 @@ export interface List<T> {
     values: T[]
 }
 
-export interface ListOptions {
+export interface ListOptions<T> {
     page?: number
     perPage?: number,
     token?: string,
+    sort?: {field: keyof T, order: "asc" | "desc"}
 }
 
 const baseUrl: string = 'http://localhost:8000'
 
-export async function list<T>(path: string, options: ListOptions = {}): Promise<List<T>> {
+export async function list<T>(path: string, options: ListOptions<T> = {}): Promise<List<T>> {
     const uri = new URL(`${baseUrl}${path}`)
     if (options.page) {
         uri.searchParams.append('page', options.page.toString())
     }
     if (options.perPage) {
         uri.searchParams.append('limit', options.perPage.toString())
+    }
+    if (options.sort) {
+        uri.searchParams.append(`order[${options.sort.field.toString()}]`, options.sort.order)
     }
 
     const headers: Record<string, string> = {'Accept': 'application/ld+json'}
