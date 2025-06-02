@@ -41,7 +41,7 @@ function MenuItem({text, href, icon, panelOpen}: {
 
     return <li className={`hover:bg-gray-100 px-2 rounded group/item h-8 ${panelOpen ? "w-full" : "hover:w-40"}`}>
         <Link href={href} className="flex items-center gap-2 h-8 py-2 relative">
-            <span className={pathname === href ? "text-indigo-600" : ""}>{icon}</span>
+            <span className={pathname === href ? "text-primary" : ""}>{icon}</span>
             <span
                 className={panelOpen ? "text-nowrap" : "hidden opacity-0 group-hover/item:block group-hover/item:opacity-100 absolute left-7"}>{text}</span>
         </Link>
@@ -149,7 +149,7 @@ export default function AdminLayout({
             shortcut: ["l", "a"],
             section: "Articles",
             keywords: "liste article",
-            perform: () => (window.location.pathname = "articles"),
+            perform: () => (window.location.pathname = "/admin/articles"),
             icon: <HiWallet size={20}/>
         },
         {
@@ -238,7 +238,7 @@ export default function AdminLayout({
                                     <Image alt="Nextsy" src={logo} className={"rounded w-6 h-6"}/>
                                 </div>
                                 {panelOpen && <div className={"font-bold text-2xl"}><span
-                                    className={"text-indigo-600"}>Next</span><span>sy</span></div>}
+                                    className={"text-primary"}>Next</span><span>sy</span></div>}
                             </div>
                             {panelOpen &&
                                 <div className="text-gray-300 font-bold uppercase text-xs mb-4 px-2">Général</div>}
@@ -308,7 +308,7 @@ export default function AdminLayout({
                                             </div>
                                         </div>
                                         <ul tabIndex={0}
-                                            className="dropdown-content menu bg-base-100 rounded-box z-1 w-full p-2 shadow-sm">
+                                            className="dropdown-content menu border-1 border-gray-100 bg-base-100 rounded-box z-1 w-full p-2 shadow-sm">
                                             <li><a><HiUser size={20}/>Profile</a></li>
                                             <li><a onClick={logout}><HiPower size={20}/>Déconnexion</a></li>
                                         </ul>
