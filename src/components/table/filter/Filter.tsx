@@ -1,3 +1,21 @@
-interface IFilterProps {
+import {Option} from "fp-ts/Option";
 
+export type OnFilterChange = (value: Option<IFilterValue[]>) => void;
+
+export interface IFilterValue {
+    operator: "eq"|"gt"|"gte"|"lt"|"lte"|"like"|"in"|"notIn"|"isNull"|"isNotNull"|"startsWith"|"endsWith"|"contains"|"notContains"
+    value: string | number | string[] | number[]
+}
+
+export interface IFilter<T> {
+    field: keyof T,
+    values: IFilterValue[]
+}
+
+export interface IFilterProps {
+    onFilterChange: OnFilterChange
+}
+
+export interface IFilterRef {
+    reset: () => void;
 }

@@ -1,14 +1,13 @@
-import {JSX, useEffect, useMemo, useState} from "react";
+import {JSX, useCallback, useEffect, useMemo, useRef, useState} from "react";
 
 import _ from "lodash"
 import {HiOutlineArrowLongDown, HiOutlineArrowLongUp} from "react-icons/hi2";
 import {PaginationInline} from "@/components/table/PaginationInline";
 import {HiFilter, HiOutlineFilter} from "react-icons/hi";
 import {FilterWrapper} from "@/components/table/filter/FilterWrapper";
-import {TextFilter} from "@/components/table/filter/TextFilter";
-import {SelectFilter} from "@/components/table/filter/SelectFilter";
-import {RangeFilter} from "@/components/table/filter/RangeFilter";
-import {IListItem, ListFilter} from "@/components/table/filter/ListFilter";
+import {IFilter, IFilterRef, IFilterValue, OnFilterChange} from "@/components/table/filter/Filter";
+import {map, Option} from 'fp-ts/Option'
+import {pipe} from "fp-ts/function";
 
 export type ITableCallback<T> = (page: number, itemsPerPage: number, sort: ITableSort<T>, callback: (response: {
     rowTotalCount: number,
@@ -21,8 +20,12 @@ export interface ITableColDef<T> {
     sortable?: keyof T
 }
 
-export interface IFilterDef {
-
+export interface IFilterDef<T> {
+    field: keyof T,
+    id: string,
+    label: string,
+    filter: (onFilterChange: OnFilterChange, ref: React.RefObject<IFilterRefs>, idx: number) => JSX.Element,
+    open?: boolean
 }
 
 interface ITableSort<T> {
@@ -33,8 +36,13 @@ interface ITableSort<T> {
 interface ITable<T> {
     callback: ITableCallback<T>
     colDefs: ITableColDef<T>[]
+    filterDefs?: IFilterDef<T>[]
     paginationPageSize?: number
     paginationPageSizeSelector?: number[]
+}
+
+export interface IFilterRefs {
+    refs: IFilterRef[]
 }
 
 export default function Table<T>(
@@ -42,7 +50,8 @@ export default function Table<T>(
         paginationPageSize = 10,
         paginationPageSizeSelector = [10, 20, 50, 100],
         callback,
-        colDefs
+        colDefs,
+        filterDefs = []
     }: ITable<T>
 ) {
     const [rowNumber, setRowNumber] = useState(1)
@@ -52,6 +61,10 @@ export default function Table<T>(
     const [loading, setLoading] = useState(false)
     const [sort, setSort] = useState<ITableSort<T>>({})
     const [filterOpen, setFilterOpen] = useState(false)
+    const [filters, setFilters] = useState<Map<string, Option<IFilter<T>>>>(new Map())
+    const [filterActiveNumber, setFilterActiveNumber] = useState(0)
+
+    const filterRefs = useRef<IFilterRefs>({refs: []});
 
     const handleChangeItemPerPage = (n: number) => {
         setItemPerPage(n)
@@ -82,6 +95,39 @@ export default function Table<T>(
         )
     }
 
+    const onFilterChange = useCallback((id: string, field: keyof T, values: Option<IFilterValue[]>) => {
+        const fieldValues: Option<IFilter<T>> = pipe(values, map(values => ({field, values})))
+
+        setFilters(prevFilters => {
+            const newFilters = new Map(prevFilters);
+            newFilters.set(id, fieldValues);
+            return newFilters;
+        })
+    }, []);
+
+    const handlerResetAll = () => {
+        filterRefs.current.refs.forEach(ref => ref.reset())
+    }
+
+    const filtersRender: JSX.Element = useMemo(() => {
+        return (
+            <>
+                {filterDefs.map((filterDef, i) => {
+                    return (
+                        <FilterWrapper
+                            key={i}
+                            label={filterDef.label}
+                            isOpen={filterDef.open}
+                            isPanelOpen={filterOpen}
+                            active={filters.has(filterDef.id) && filters.get(filterDef.id)?._tag !== "None"}
+                        >
+                            {filterDef.filter((value: Option<IFilterValue[]>) => onFilterChange(filterDef.id, filterDef.field, value), filterRefs, i)}
+                        </FilterWrapper>)
+                })}
+            </>
+        )
+    }, [filterDefs, filters, filterOpen]);
+
     const debouncedCallback = useMemo(() => {
         return _.debounce((currentPage: number, currentItemPerPage: number, sort: ITableSort<T>) => {
             setLoading(true)
@@ -93,21 +139,16 @@ export default function Table<T>(
         }, 500);
     }, [callback]);
 
-
-    const productCategories: IListItem[] = [
-        { id: 'electronics', label: 'Électronique' },
-        { id: 'books', label: 'Livres' },
-        { id: 'clothing', label: 'Vêtements' },
-        { id: 'home', label: 'Maison & Jardin' },
-    ];
-
     useEffect(() => {
         debouncedCallback(page, itemPerPage, sort)
-
         return () => {
             debouncedCallback.cancel();
         };
-    }, [page, itemPerPage, sort, debouncedCallback, callback]);
+    }, [page, itemPerPage, sort, debouncedCallback, callback, filters]);
+
+    useEffect(() => {
+        setFilterActiveNumber(filters.values().filter(f => f._tag !== "None").toArray().length)
+    }, [filters]);
 
     return (
         <>
@@ -131,48 +172,23 @@ export default function Table<T>(
                 <div className={`relative select-none`}>
                     <div className={`relative select-none cursor-pointer`}
                          onClick={() => setFilterOpen(o => !o)}>
-                        {!filterOpen &&  <HiOutlineFilter size={20}/>}
+                        {!filterOpen && <HiOutlineFilter size={20}/>}
                         {filterOpen && <HiFilter className={`text-primary`} size={20}/>}
-                        <div
+                        {filterActiveNumber > 0 && <div
                             className={`bg-primary text-white text-xs rounded-full bottom-full left-full absolute w-4 h-4 flex items-center -translate-x-1/2 translate-y-1/2`}>
-                            <span className={`grow text-center`}>2</span>
-                        </div>
+                            <span className={`grow text-center`}>{filterActiveNumber}</span>
+                        </div>}
                     </div>
                     <div
                         className={`bg-base-100 rounded-box z-1 w-96 p-4 translate-y-4 border-1 border-gray-100 shadow-sm absolute top-full right-0 ${filterOpen ? "block" : "hidden"}`}>
                         <div className={`flex items-center gap-2`}>
                             <div className={"text-xl font-semibold"}>Filtres</div>
-                            <div className="badge badge-primary badge-sm">2</div>
+                            {filterActiveNumber > 0 &&
+                                <div className="badge badge-primary badge-sm">{filterActiveNumber}</div>}
                             <div className={"grow"}></div>
-                            <div className="text-primary cursor-pointer">Tout éffacer</div>
+                            <div className="text-primary cursor-pointer" onClick={handlerResetAll}>Tout éffacer</div>
                         </div>
-                        <FilterWrapper name="Nom" isOpen={true}>
-                            <TextFilter placeholder={"Recherche un Article"} />
-                        </FilterWrapper>
-                        <FilterWrapper name="Id">
-                            <TextFilter placeholder={"Recherche un Article"} />
-                        </FilterWrapper>
-                        <FilterWrapper name="Catégorie" isOpen={true}>
-                            <ListFilter items={productCategories} selectedItemIds={[]} />
-                        </FilterWrapper>
-                        <FilterWrapper name="Quantité">
-                            <RangeFilter
-                                dots
-                                min={0}
-                                max={10000}
-                                currentMin={0}
-                                currentMax={1050}
-                            />
-                        </FilterWrapper>
-                        <FilterWrapper name="Prix" isOpen={true}>
-                            <RangeFilter
-                                dots
-                                min={0}
-                                max={100}
-                                currentMin={20}
-                                currentMax={40}
-                            />
-                        </FilterWrapper>
+                        {filtersRender}
                     </div>
                 </div>
             </div>

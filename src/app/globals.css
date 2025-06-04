@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @tailwind base;
-@tailwind components;
 @tailwind utilities;
 @plugin "daisyui";
 
@@ -38,6 +37,20 @@
 
         .rc-slider-mark {
             @apply !top-3;
+        }
+    }
+}
+
+.choices {
+    .choices__inner {
+        @apply input w-full !outline-none;
+    }
+
+    .choices__item[data-item] {
+        @apply !bg-primary !border-primary !border-none;
+
+        .choices__button {
+            @apply !border-none
         }
     }
 }
