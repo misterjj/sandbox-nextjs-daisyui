@@ -39,6 +39,11 @@ interface ITable<T> {
     paginationPageSizeSelector?: number[]
 }
 
+interface IFilterFieldValues<T> {
+    field: keyof T
+    values: IFilterValue[]
+}
+
 export default function Table<T>(
     {
         paginationPageSize = 10,
@@ -55,6 +60,7 @@ export default function Table<T>(
     const [loading, setLoading] = useState(false)
     const [sort, setSort] = useState<ITableSort<T>>({})
     const [filterOpen, setFilterOpen] = useState(false)
+    const [filters, setFilters] = useState<Map<string, IFilterFieldValues<T>|undefined>>(new Map())
 
     const handleChangeItemPerPage = (n: number) => {
         setItemPerPage(n)

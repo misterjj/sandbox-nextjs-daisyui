@@ -3,7 +3,7 @@
 import ankamaLogo from '../../assets/ankama.svg'
 import Image from "next/image";
 import {useAuth} from "@/contexts/AuthContext";
-import {useRef, useState} from "react";
+import {FormEvent, useRef, useState} from "react";
 
 export default function Login() {
     const {login} = useAuth();
@@ -12,7 +12,8 @@ export default function Login() {
     const [loading, setLoading] = useState<boolean>(false);
     const [loginFail, setLoginFail] = useState<boolean>(false);
 
-    const onSubmit = () => {
+    const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
         if (!loading) {
             setLoading(true)
             login({
@@ -35,33 +36,34 @@ export default function Login() {
         <div className="w-full h-full bg-gray-100 text-gray-900 flex">
             <div className="min-h-full px-48 flex items-center">
                 <div className="min-w-[400px] w-full">
-                    <div className="w-ful0 flex flex-col gap-5">
-                        <div className="font-black text-2xl">Se connecter</div>
-                        {loginFail && <div role="alert" className="alert alert-error alert-outline">
-                            <span>Echec de la connexion.</span>
-                        </div>}
-                        <fieldset className="fieldset grow p-0">
-                            <legend className="fieldset-legend pt-0">Identifiant</legend>
-                            <input type="text" className="input w-full" placeholder="" ref={emailRef}/>
-                        </fieldset>
-                        <fieldset className="fieldset grow p-0">
-                            <legend className="fieldset-legend pt-0">Mot de passe</legend>
-                            <input type="password" className="input w-full" placeholder="" ref={passwordRef}/>
-                        </fieldset>
-                        <div className="flex items-center text-xs">
-                            <div className="grow">
-                                <label className="fieldset-label text-gray-900">
-                                    <input type="checkbox" className="checkbox checkbox-xs"/>
-                                    Se souvenir de moi
-                                </label>
+                    <div className="w-full flex flex-col gap-5">
+                        <form className="w-full flex flex-col gap-5" onSubmit={onSubmit}>
+                            <div className="font-black text-2xl">Se connecter</div>
+                            {loginFail && <div role="alert" className="alert alert-error alert-outline">
+                                <span>Echec de la connexion.</span>
+                            </div>}
+                            <fieldset className="fieldset grow p-0">
+                                <legend className="fieldset-legend pt-0">Identifiant</legend>
+                                <input type="text" className="input w-full" placeholder="" ref={emailRef}/>
+                            </fieldset>
+                            <fieldset className="fieldset grow p-0">
+                                <legend className="fieldset-legend pt-0">Mot de passe</legend>
+                                <input type="password" className="input w-full" placeholder="" ref={passwordRef}/>
+                            </fieldset>
+                            <div className="flex items-center text-xs">
+                                <div className="grow">
+                                    <label className="fieldset-label text-gray-900">
+                                        <input type="checkbox" className="checkbox checkbox-xs"/>
+                                        Se souvenir de moi
+                                    </label>
+                                </div>
+                                <a href="" className="text-primary">Mot de passe oublié ?</a>
                             </div>
-                            <a href="" className="text-primary">Mot de passe oublié ?</a>
-                        </div>
-                        <div className={`btn btn-primary w-full ${loading ? "opacity-50" : "opacity-100"}`}
-                             onClick={onSubmit}>
-                            {!loading && <>Se connecter</>}
-                            {loading && <span className="loading loading-ring loading-sm"></span>}
-                        </div>
+                            <button type={"submit"} className={`btn btn-primary w-full ${loading ? "opacity-50" : "opacity-100"}`}>
+                                {!loading && <>Se connecter</>}
+                                {loading && <span className="loading loading-ring loading-sm"></span>}
+                            </button>
+                        </form>
                         <div className="divider my-0">Ou se connecter avec</div>
                         <div className="flex gap-4">
                             <button className="btn bg-white text-black border-[#e5e5e5] grow"
