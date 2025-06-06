@@ -9,14 +9,22 @@ import {HiOutlineTag} from "react-icons/hi";
 import {TextFilter} from "@/components/table/filter/TextFilter";
 import {IListItem, ListFilter} from "@/components/table/filter/ListFilter";
 import {RangeFilter} from "@/components/table/filter/RangeFilter";
-import {IFilterRef, OnFilterChange} from "@/components/table/filter/Filter";
+import {IFilter, IFilterRef, OnFilterChange} from "@/components/table/filter/Filter";
 import {ChoicesFilter, IChoiceItem} from "@/components/table/filter/ChoicesFilter";
+import {flatMap} from "fp-ts/es6/Array";
+import {pipe} from "fp-ts/function";
+import {Filter} from "@/sdk/core";
+import {listCategories} from "@/sdk/category/CategoriesApi";
 
 export default function Articles() {
     const {token} = useAuth();
 
-    const listProductsCallback = useCallback<ITableCallback<Product>>((page, itemsPerPage, sort, callback) => {
+    const listProductsCallback = useCallback<ITableCallback<Product>>((page, itemsPerPage, sort, filters, callback) => {
         if (!token) return;
+
+        const fn = (f: IFilter<Product>): Filter<Product>[] => {
+            return f.values.map(v => ({field: f.field, operator: v.operator, value: v.value})) as Filter<Product>[]
+        }
 
         listProducts({
             page,
@@ -25,6 +33,7 @@ export default function Articles() {
                 field: sort.field,
                 order: sort.order
             },
+            filters: pipe(filters, flatMap(fn)),
             token
         }).then(data => callback({rowTotalCount: data.count, values: data.values}))
     }, [token]);
@@ -72,14 +81,6 @@ export default function Articles() {
         {id: 'offline', label: 'Hors ligne'},
     ];
 
-    const productCategories = useMemo<IChoiceItem[]>(() => {
-        return [
-            {value: "1", label: "Dofus"},
-            {value: "2", label: "Wakfu"},
-            {value: "3", label: "Dofus touch"},
-        ]
-    }, []);
-
     const initRef = (idx: number, ref: RefObject<IFilterRefs>, el: IFilterRef | null): void => {
         if (null !== el) {
             ref.current.refs[idx] = el
@@ -119,15 +120,19 @@ export default function Articles() {
                 open: true
             },
             {
-                field: "categories",
+                field: "categories.id",
                 id: "category",
                 label: "Catégorie",
-                filter: (onFilterChange: OnFilterChange, ref: RefObject<IFilterRefs>, idx: number) =>
-                    <ChoicesFilter ref={el => initRef(idx, ref, el)}
-                                   multiple={true}
-                                   choices={productCategories}
-                                   onFilterChange={onFilterChange}
-                    />,
+                filter: (onFilterChange: OnFilterChange, ref: RefObject<IFilterRefs>, idx: number) => {
+                    return listCategories({perPage: 1000})
+                        .then(categories => {
+                        return <ChoicesFilter ref={el => initRef(idx, ref, el)}
+                                              multiple={true}
+                                              choices={categories.values.map(c => ({value: c.id.toString(), label: c.nameFr || ""}))}
+                                              onFilterChange={onFilterChange}
+                        />
+                    })
+                },
                 open: true
             },
             {

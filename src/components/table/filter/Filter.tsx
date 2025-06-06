@@ -1,14 +1,16 @@
 import {Option} from "fp-ts/Option";
+import {Paths} from "@/utils/Utils";
 
 export type OnFilterChange = (value: Option<IFilterValue[]>) => void;
 
 export interface IFilterValue {
-    operator: "eq"|"gt"|"gte"|"lt"|"lte"|"like"|"in"|"notIn"|"isNull"|"isNotNull"|"startsWith"|"endsWith"|"contains"|"notContains"
+    operator: "eq"|"gt"|"gte"|"lt"|"lte"|"like"|"in"|"notIn"
     value: string | number | string[] | number[]
 }
 
 export interface IFilter<T> {
-    field: keyof T,
+    field: Paths<T>,
+    subField?: string,
     values: IFilterValue[]
 }
 

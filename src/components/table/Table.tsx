@@ -1,4 +1,4 @@
-import {JSX, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {JSX, Suspense, useCallback, useEffect, useMemo, useRef, useState} from "react";
 
 import _ from "lodash"
 import {HiOutlineArrowLongDown, HiOutlineArrowLongUp} from "react-icons/hi2";
@@ -8,8 +8,11 @@ import {FilterWrapper} from "@/components/table/filter/FilterWrapper";
 import {IFilter, IFilterRef, IFilterValue, OnFilterChange} from "@/components/table/filter/Filter";
 import {map, Option} from 'fp-ts/Option'
 import {pipe} from "fp-ts/function";
+import {Paths} from "@/utils/Utils";
+import AsyncContent from "@/components/AsyncContent";
+import {FilterRenderer} from "@/components/table/filter/FilterRenderer";
 
-export type ITableCallback<T> = (page: number, itemsPerPage: number, sort: ITableSort<T>, callback: (response: {
+export type ITableCallback<T> = (page: number, itemsPerPage: number, sort: ITableSort<T>, filters: IFilter<T>[], callback: (response: {
     rowTotalCount: number,
     values: T[]
 }) => void) => void
@@ -21,10 +24,10 @@ export interface ITableColDef<T> {
 }
 
 export interface IFilterDef<T> {
-    field: keyof T,
+    field: Paths<T>,
     id: string,
     label: string,
-    filter: (onFilterChange: OnFilterChange, ref: React.RefObject<IFilterRefs>, idx: number) => JSX.Element,
+    filter: (onFilterChange: OnFilterChange, ref: React.RefObject<IFilterRefs>, idx: number) => JSX.Element | Promise<JSX.Element>,
     open?: boolean
 }
 
@@ -95,7 +98,7 @@ export default function Table<T>(
         )
     }
 
-    const onFilterChange = useCallback((id: string, field: keyof T, values: Option<IFilterValue[]>) => {
+    const onFilterChange = useCallback((id: string, field: Paths<T>, values: Option<IFilterValue[]>) => {
         const fieldValues: Option<IFilter<T>> = pipe(values, map(values => ({field, values})))
 
         setFilters(prevFilters => {
@@ -112,26 +115,33 @@ export default function Table<T>(
     const filtersRender: JSX.Element = useMemo(() => {
         return (
             <>
-                {filterDefs.map((filterDef, i) => {
-                    return (
-                        <FilterWrapper
-                            key={i}
-                            label={filterDef.label}
-                            isOpen={filterDef.open}
-                            isPanelOpen={filterOpen}
-                            active={filters.has(filterDef.id) && filters.get(filterDef.id)?._tag !== "None"}
-                        >
-                            {filterDef.filter((value: Option<IFilterValue[]>) => onFilterChange(filterDef.id, filterDef.field, value), filterRefs, i)}
-                        </FilterWrapper>)
-                })}
+                {filterDefs.map((filterDef, i) => (
+                    <FilterWrapper
+                        key={i}
+                        label={filterDef.label}
+                        isOpen={filterDef.open}
+                        isPanelOpen={filterOpen}
+                        active={filters.has(filterDef.id) && filters.get(filterDef.id)?._tag !== "None"}
+                    >
+                        <Suspense fallback={<div>Chargement...</div>}>
+                            <FilterRenderer
+                                cacheKey={filterDef.id}
+                                filterFn={() => {
+                                    const onFilterChangeForDef = (value: Option<IFilterValue[]>) => onFilterChange(filterDef.id, filterDef.field, value);
+                                    return filterDef.filter(onFilterChangeForDef, filterRefs, i);
+                                }}
+                            />
+                        </Suspense>
+                    </FilterWrapper>
+                ))}
             </>
-        )
-    }, [filterDefs, filters, filterOpen]);
+        );
+    }, [filterDefs, filters, filterOpen, onFilterChange, filterRefs]);
 
     const debouncedCallback = useMemo(() => {
-        return _.debounce((currentPage: number, currentItemPerPage: number, sort: ITableSort<T>) => {
+        return _.debounce((currentPage: number, currentItemPerPage: number, sort: ITableSort<T>, filters: IFilter<T>[]) => {
             setLoading(true)
-            callback(currentPage, currentItemPerPage, sort, ({rowTotalCount, values}) => {
+            callback(currentPage, currentItemPerPage, sort, filters, ({rowTotalCount, values}) => {
                 setRowNumber(rowTotalCount);
                 setItems(values);
                 setLoading(false)
@@ -140,7 +150,7 @@ export default function Table<T>(
     }, [callback]);
 
     useEffect(() => {
-        debouncedCallback(page, itemPerPage, sort)
+        debouncedCallback(page, itemPerPage, sort, filters.values().toArray().filter(f => f._tag !== "None").map(f => f.value))
         return () => {
             debouncedCallback.cancel();
         };
@@ -219,6 +229,9 @@ export default function Table<T>(
                     {items.map((t, i) => <tr key={i}>{colDefs.map((col, j) => <td key={j}>{col.render(t)}</td>)}</tr>)}
                     </tbody>
                 </table>
+                {items.length === 0 && !loading && <div className={`w-full h-24 flex items-center justify-center text-2xl font-light text-gray-400`}>
+                    Aucun résultat
+                </div>}
             </div>
         </>
     )

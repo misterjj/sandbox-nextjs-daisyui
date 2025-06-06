@@ -1,5 +1,5 @@
 import {list, List, ListOptions} from "@/sdk/core";
-import {Categpry} from "@/sdk/product/CategpriesApi";
+import {Category} from "@/sdk/category/CategoriesApi";
 
 export interface Product {
     id: number
@@ -10,7 +10,7 @@ export interface Product {
     nameEn?: string
     descriptionFr?: string
     descriptionEn?: string
-    categories: Array<Categpry>
+    categories: Array<Category>
 }
 
 export async function listProducts (options: ListOptions<Product> = {}): Promise<List<Product>> {
