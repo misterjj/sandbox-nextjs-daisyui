@@ -11,6 +11,7 @@
         .rc-slider-rail {
             @apply !h-3 !bg-primary/10 -translate-y-1/2;
         }
+
         .rc-slider-step {
             @apply !h-3 -translate-y-1/2;
         }
@@ -51,6 +52,30 @@
 
         .choices__button {
             @apply !border-none
+        }
+    }
+}
+
+.input {
+    @apply !outline-none;
+}
+
+.tabs-langue {
+    .tabs {
+        .tab[aria-selected="true"] {
+            @apply !bg-gray-100;
+
+            &:focus-visible {
+                @apply !outline-none;
+            }
+        }
+    }
+
+    &:has(.input:focus-visible) {
+        .tabs {
+            .tab[aria-selected="true"] {
+                @apply !bg-gray-800 !text-white;
+            }
         }
     }
 }

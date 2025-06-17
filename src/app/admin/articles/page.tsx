@@ -10,7 +10,7 @@ import {TextFilter} from "@/components/table/filter/TextFilter";
 import {IListItem, ListFilter} from "@/components/table/filter/ListFilter";
 import {RangeFilter} from "@/components/table/filter/RangeFilter";
 import {IFilter, IFilterRef, OnFilterChange} from "@/components/table/filter/Filter";
-import {ChoicesFilter, IChoiceItem} from "@/components/table/filter/ChoicesFilter";
+import {ChoicesFilter} from "@/components/table/filter/ChoicesFilter";
 import {flatMap} from "fp-ts/es6/Array";
 import {pipe} from "fp-ts/function";
 import {Filter} from "@/sdk/core";
@@ -126,12 +126,15 @@ export default function Articles() {
                 filter: (onFilterChange: OnFilterChange, ref: RefObject<IFilterRefs>, idx: number) => {
                     return listCategories({perPage: 1000})
                         .then(categories => {
-                        return <ChoicesFilter ref={el => initRef(idx, ref, el)}
-                                              multiple={true}
-                                              choices={categories.values.map(c => ({value: c.id.toString(), label: c.nameFr || ""}))}
-                                              onFilterChange={onFilterChange}
-                        />
-                    })
+                            return <ChoicesFilter ref={el => initRef(idx, ref, el)}
+                                                  multiple={true}
+                                                  choices={categories.values.map(c => ({
+                                                      value: c.id.toString(),
+                                                      label: c.nameFr || ""
+                                                  }))}
+                                                  onFilterChange={onFilterChange}
+                            />
+                        })
                 },
                 open: true
             },

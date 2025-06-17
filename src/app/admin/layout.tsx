@@ -39,9 +39,11 @@ function MenuItem({text, href, icon, panelOpen}: {
 }): JSX.Element {
     const pathname = usePathname()
 
+    const active = href === "/admin" ? pathname === href : pathname.startsWith(href)
+
     return <li className={`hover:bg-gray-100 px-2 rounded group/item h-8 ${panelOpen ? "w-full" : "hover:w-40"}`}>
         <Link href={href} className="flex items-center gap-2 h-8 py-2 relative">
-            <span className={pathname === href ? "text-primary" : ""}>{icon}</span>
+            <span className={active ? "text-primary" : ""}>{icon}</span>
             <span
                 className={panelOpen ? "text-nowrap" : "hidden opacity-0 group-hover/item:block group-hover/item:opacity-100 absolute left-7"}>{text}</span>
         </Link>
@@ -158,7 +160,7 @@ export default function AdminLayout({
             shortcut: ["a", "a"],
             section: "Articles",
             keywords: "ajouter article",
-            perform: () => (window.location.pathname = "articles"),
+            perform: () => (window.location.pathname = "/admin/articles/create"),
             icon: <div className="relative"><HiWallet size={20}/><HiPlus size={10}
                                                                          className="absolute top-0 right-0 translate-x-2"/>
             </div>
