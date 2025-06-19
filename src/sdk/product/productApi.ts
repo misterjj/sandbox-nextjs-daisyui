@@ -1,11 +1,12 @@
 import {list, List, ListOptions} from "@/sdk/core";
 import {Category} from "@/sdk/category/CategoriesApi";
+import {ProductImage} from "@/sdk/productImage/productImageApi";
 
 export interface Product {
     id: number|null
     price: string
     stock: number
-    image?: string
+    images: ProductImage[]
     nameFr?: string
     nameEn?: string
     descriptionFr?: string
@@ -17,7 +18,7 @@ export const emptyProduct = {
     id: null,
     price: "",
     stock: 0,
-    image: "",
+    images: [],
     nameFr: "",
     nameEn: "",
     descriptionFr: "",

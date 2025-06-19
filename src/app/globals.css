@@ -79,3 +79,25 @@
         }
     }
 }
+
+.ck-content {
+    @apply !min-h-80;
+
+    h1 {
+        @apply !text-2xl !font-bold;
+    }
+
+    h2 {
+        @apply !text-xl !font-semibold;
+    }
+
+    h3 {
+        @apply !font-semibold;
+    }
+
+    ul {
+        padding-inline-start: 40px;
+        list-style: initial;
+        margin: initial;
+    }
+}
